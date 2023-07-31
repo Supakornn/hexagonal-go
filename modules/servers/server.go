@@ -45,6 +45,8 @@ func (s *server) Start() {
 	modules := InitModule(v1, s, m)
 	modules.MonitorModule()
 
+	s.app.Use(m.RouterCheck())
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
