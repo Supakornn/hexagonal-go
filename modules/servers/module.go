@@ -2,9 +2,9 @@ package servers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/supakornn/hexagonal-go/modules/middlewares/handlers"
-	"github.com/supakornn/hexagonal-go/modules/middlewares/repositories"
-	"github.com/supakornn/hexagonal-go/modules/middlewares/usecases"
+	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresHandlers"
+	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
+	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 	"github.com/supakornn/hexagonal-go/modules/monitor/monitorHandlers"
 )
 
@@ -15,10 +15,10 @@ type IModuleFactory interface {
 type moduleFactory struct {
 	router     fiber.Router
 	server     *server
-	middleware handlers.IHandler
+	middleware middlewaresHandlers.IMiddlewareHandler
 }
 
-func InitModule(r fiber.Router, s *server, m handlers.IHandler) IModuleFactory {
+func InitModule(r fiber.Router, s *server, m middlewaresHandlers.IMiddlewareHandler) IModuleFactory {
 	return &moduleFactory{
 		router:     r,
 		server:     s,
@@ -26,10 +26,10 @@ func InitModule(r fiber.Router, s *server, m handlers.IHandler) IModuleFactory {
 	}
 }
 
-func InitMiddleware(s *server) handlers.IHandler {
-	repository := repositories.MiddlewarsRepo(s.db)
-	usecase := usecases.MiddlewareUsecase(repository)
-	return handlers.MiddlewarsHandler(s.cfg, usecase)
+func InitMiddleware(s *server) middlewaresHandlers.IMiddlewareHandler {
+	repository := middlewaresRepositories.MiddlewaresRepo(s.db)
+	usecase := middlewaresUsecases.MiddlewaresUsecase(repository)
+	return middlewaresHandlers.MiddlewarsHandler(s.cfg, usecase)
 }
 
 func (m *moduleFactory) MonitorModule() {

@@ -1,4 +1,4 @@
-package handlers
+package middlewaresHandlers
 
 import (
 	"github.com/gofiber/fiber/v2"
@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/supakornn/hexagonal-go/config"
 	"github.com/supakornn/hexagonal-go/modules/entities"
-	"github.com/supakornn/hexagonal-go/modules/middlewares/usecases"
+	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 )
 
 type middlewareHanlderErrCode string
@@ -15,25 +15,25 @@ const (
 	routerCheckErr middlewareHanlderErrCode = "router-001"
 )
 
-type IHandler interface {
+type IMiddlewareHandler interface {
 	Cors() fiber.Handler
 	RouterCheck() fiber.Handler
 	Logger() fiber.Handler
 }
 
-type hanlder struct {
+type middlewarehanlder struct {
 	cfg                 config.Iconfig
-	middlerwaresUsecase usecases.IUsecase
+	middlerwaresUsecase middlewaresUsecases.IMiddlewaresUsecase
 }
 
-func MiddlewarsHandler(cfg config.Iconfig, middlerwaresUsecase usecases.IUsecase) IHandler {
-	return &hanlder{
+func MiddlewarsHandler(cfg config.Iconfig, middlerwaresUsecase middlewaresUsecases.IMiddlewaresUsecase) IMiddlewareHandler {
+	return &middlewarehanlder{
 		cfg:                 cfg,
 		middlerwaresUsecase: middlerwaresUsecase,
 	}
 }
 
-func (h *hanlder) Cors() fiber.Handler {
+func (h *middlewarehanlder) Cors() fiber.Handler {
 	return cors.New(cors.Config{
 		Next:             cors.ConfigDefault.Next,
 		AllowOrigins:     "*",
@@ -44,7 +44,7 @@ func (h *hanlder) Cors() fiber.Handler {
 	})
 }
 
-func (h *hanlder) RouterCheck() fiber.Handler {
+func (h *middlewarehanlder) RouterCheck() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		return entities.NewResponse(c).Error(
 			fiber.ErrNotFound.Code,
@@ -54,7 +54,7 @@ func (h *hanlder) RouterCheck() fiber.Handler {
 	}
 }
 
-func (h *hanlder) Logger() fiber.Handler {
+func (h *middlewarehanlder) Logger() fiber.Handler {
 	return logger.New(logger.Config{
 		Format:     "${time} ${ip} ${status} - ${method} ${path}\n",
 		TimeFormat: "02/01/2006",
