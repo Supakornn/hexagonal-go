@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/supakornn/hexagonal-go/config"
 	"github.com/supakornn/hexagonal-go/modules/entities"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/usecases"
@@ -17,6 +18,7 @@ const (
 type IHandler interface {
 	Cors() fiber.Handler
 	RouterCheck() fiber.Handler
+	Logger() fiber.Handler
 }
 
 type hanlder struct {
@@ -50,4 +52,12 @@ func (h *hanlder) RouterCheck() fiber.Handler {
 			"router not found",
 		).Res()
 	}
+}
+
+func (h *hanlder) Logger() fiber.Handler {
+	return logger.New(logger.Config{
+		Format:     "${time} ${ip} ${status} - ${method} ${path}\n",
+		TimeFormat: "02/01/2006",
+		TimeZone:   "Bangkok/Asia",
+	})
 }
