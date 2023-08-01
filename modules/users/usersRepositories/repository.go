@@ -1,6 +1,8 @@
 package usersRepositories
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/supakornn/hexagonal-go/modules/users"
 	"github.com/supakornn/hexagonal-go/modules/users/usersPatterns"
@@ -8,6 +10,7 @@ import (
 
 type IUserRepository interface {
 	InsertUser(req *users.Register, isAdmin bool) (*users.UserPassport, error)
+	FindOneUserByEmail(email string) (*users.UserCredentialCheck, error)
 }
 
 type userRepository struct {
@@ -41,5 +44,23 @@ func (r *userRepository) InsertUser(req *users.Register, isAdmin bool) (*users.U
 		return nil, err
 	}
 
+	return user, nil
+}
+
+func (r *userRepository) FindOneUserByEmail(email string) (*users.UserCredentialCheck, error) {
+	query := `
+	SELECT
+		"id",
+		"email",
+		"password",
+		"username",
+		"role_id"
+	FROM "users"
+	WHERE "email" = $1;`
+
+	user := new(users.UserCredentialCheck)
+	if err := r.db.Get(user, query, email); err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
 	return user, nil
 }
