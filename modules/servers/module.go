@@ -6,10 +6,14 @@ import (
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 	"github.com/supakornn/hexagonal-go/modules/monitor/monitorHandlers"
+	"github.com/supakornn/hexagonal-go/modules/users/usersHandlers"
+	"github.com/supakornn/hexagonal-go/modules/users/usersRepositories"
+	"github.com/supakornn/hexagonal-go/modules/users/usersUsecases"
 )
 
 type IModuleFactory interface {
 	MonitorModule()
+	UserModule()
 }
 
 type moduleFactory struct {
@@ -34,7 +38,14 @@ func InitMiddleware(s *server) middlewaresHandlers.IMiddlewareHandler {
 
 func (m *moduleFactory) MonitorModule() {
 	handler := monitorHandlers.MonitorHandler(m.server.cfg)
-
 	m.router.Get("/", handler.HealthCheck)
+}
 
+func (m *moduleFactory) UserModule() {
+	repository := usersRepositories.UserRepository(m.server.db)
+	usecase := usersUsecases.UserUsecase(m.server.cfg, repository)
+	handler := usersHandlers.UserHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/users")
+	router.Post("/signup", handler.SignUpCustomer)
 }
