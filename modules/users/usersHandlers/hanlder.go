@@ -13,11 +13,13 @@ type userHandlersErrCode string
 const (
 	signUpCustomerErr userHandlersErrCode = "users-001"
 	signInErr         userHandlersErrCode = "users-002"
+	refreshErr        userHandlersErrCode = "users-003"
 )
 
 type IUsersHandler interface {
 	SignUpCustomer(c *fiber.Ctx) error
 	SignIn(*fiber.Ctx) error
+	RefreshPassport(c *fiber.Ctx) error
 }
 
 type usersHandler struct {
@@ -91,6 +93,28 @@ func (h *usersHandler) SignIn(c *fiber.Ctx) error {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
 			string(signInErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, passport).Res()
+}
+
+func (h *usersHandler) RefreshPassport(c *fiber.Ctx) error {
+	req := new(users.UserRefreshCredential)
+	if err := c.BodyParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(refreshErr),
+			err.Error(),
+		).Res()
+	}
+
+	passport, err := h.usersUsecase.RefreshPassport(req)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(refreshErr),
 			err.Error(),
 		).Res()
 	}

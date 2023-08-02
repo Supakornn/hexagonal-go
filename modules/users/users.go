@@ -8,16 +8,16 @@ import (
 )
 
 type User struct {
-	Id       string `db: "id" json: "id"`
-	Email    string `db: "email" json: "email"`
-	Username string `db: "username" json: "username"`
-	RoleId   int    `db: "role_id" json: "role_id"`
+	Id       string `db:"id" json:"id"`
+	Email    string `db:"email" json:"email"`
+	Username string `db:"username" json:"username"`
+	RoleId   int    `db:"role_id" json:"role_id"`
 }
 
 type Register struct {
-	Email    string `db: "email" json: "email" form: "email"`
-	Password string `db: "password" json: "password" form: "password"`
-	Username string `db: "username" json: "username" form: "username"`
+	Email    string `db:"email" json:"email" form:"email"`
+	Password string `db:"password" json:"password" form:"password"`
+	Username string `db:"username" json:"username" form:"username"`
 }
 
 func (obj *Register) Bcrypt() error {
@@ -39,8 +39,8 @@ func (obj *Register) IsEmail() bool {
 }
 
 type UserPassport struct {
-	User  *User      `json: "user"`
-	Token *UserToken `json: "token"`
+	User  *User      `json:"user"`
+	Token *UserToken `json:"token"`
 }
 
 type UserCredential struct {
@@ -56,7 +56,21 @@ type UserCredentialCheck struct {
 	RoleId   int    `db:"role_id"`
 }
 type UserToken struct {
-	Id           string `db: "id" json: "id"`
-	AccessToken  string `db: "access_token" json: "access_token"`
-	RefreshToken string `db: "refresh_token" json: "refresh_token"`
+	Id           string `db:"id" json:"id"`
+	AccessToken  string `db:"access_token" json:"access_token"`
+	RefreshToken string `db:"refresh_token" json:"refresh_token"`
+}
+
+type UserClaims struct {
+	Id     string `db:"id" json:"id"`
+	RoleId int    `db:"role" json:"role"`
+}
+
+type UserRefreshCredential struct {
+	RefreshToken string `db:"refresh_token" json:"refresh_token" form:"refresh_token"`
+}
+
+type Oauth struct {
+	Id     string `db:"id" json:"id"`
+	UserId string `db:"user_id" json:"user_id"`
 }
