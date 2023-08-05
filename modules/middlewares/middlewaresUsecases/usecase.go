@@ -3,6 +3,7 @@ package middlewaresUsecases
 import "github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 
 type IMiddlewaresUsecase interface {
+	FindAccessToken(userId, accessToken string) bool
 }
 
 type middlewaresusecase struct {
@@ -13,4 +14,8 @@ func MiddlewaresUsecase(middlewaresRepo middlewaresRepositories.IMiddlewaresRepo
 	return &middlewaresusecase{
 		middlewaresRepo: middlewaresRepo,
 	}
+}
+
+func (u *middlewaresusecase) FindAccessToken(userId, accessToken string) bool {
+	return u.middlewaresRepo.FindAccessToken(userId, accessToken)
 }

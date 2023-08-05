@@ -1,24 +1,29 @@
 package middlewaresHandlers
 
 import (
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/supakornn/hexagonal-go/config"
 	"github.com/supakornn/hexagonal-go/modules/entities"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
+	"github.com/supakornn/hexagonal-go/pkg/auth"
 )
 
 type middlewareHanlderErrCode string
 
 const (
 	routerCheckErr middlewareHanlderErrCode = "router-001"
+	jwtAuthErr     middlewareHanlderErrCode = "router-002"
 )
 
 type IMiddlewareHandler interface {
 	Cors() fiber.Handler
 	RouterCheck() fiber.Handler
 	Logger() fiber.Handler
+	JwtAuth() fiber.Handler
 }
 
 type middlewarehanlder struct {
@@ -60,4 +65,23 @@ func (h *middlewarehanlder) Logger() fiber.Handler {
 		TimeFormat: "02/01/2006",
 		TimeZone:   "Bangkok/Asia",
 	})
+}
+
+func (h *middlewarehanlder) JwtAuth() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		token := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+		result, err := auth.ParseToken(h.cfg.Jwt(), token)
+		if err != nil {
+			return entities.NewResponse(c).Error(fiber.ErrUnauthorized.Code, string(jwtAuthErr), err.Error()).Res()
+		}
+
+		clamis := result.Claims
+		if !h.middlerwaresUsecase.FindAccessToken(clamis.Id, token) {
+			return entities.NewResponse(c).Error(fiber.ErrUnauthorized.Code, string(jwtAuthErr), "no permission").Res()
+		}
+
+		c.Locals("userId", clamis.Id)
+		c.Locals("userRoleId", clamis.RoleId)
+		return c.Next()
+	}
 }
