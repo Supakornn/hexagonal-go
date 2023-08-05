@@ -77,13 +77,13 @@ func (h *middlewarehanlder) JwtAuth() fiber.Handler {
 			return entities.NewResponse(c).Error(fiber.ErrUnauthorized.Code, string(jwtAuthErr), err.Error()).Res()
 		}
 
-		clamis := result.Claims
-		if !h.middlerwaresUsecase.FindAccessToken(clamis.Id, token) {
+		claims := result.Claims
+		if !h.middlerwaresUsecase.FindAccessToken(claims.Id, token) {
 			return entities.NewResponse(c).Error(fiber.ErrUnauthorized.Code, string(jwtAuthErr), "no permission").Res()
 		}
 
-		c.Locals("userId", clamis.Id)
-		c.Locals("userRoleId", clamis.RoleId)
+		c.Locals("userId", claims.Id)
+		c.Locals("userRoleId", claims.RoleId)
 		return c.Next()
 	}
 }
