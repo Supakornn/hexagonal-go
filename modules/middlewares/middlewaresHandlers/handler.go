@@ -10,6 +10,7 @@ import (
 	"github.com/supakornn/hexagonal-go/modules/entities"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 	"github.com/supakornn/hexagonal-go/pkg/auth"
+	"github.com/supakornn/hexagonal-go/pkg/utils"
 )
 
 type middlewareHanlderErrCode string
@@ -18,6 +19,7 @@ const (
 	routerCheckErr middlewareHanlderErrCode = "router-001"
 	jwtAuthErr     middlewareHanlderErrCode = "router-002"
 	paramsCheckErr middlewareHanlderErrCode = "router-003"
+	AuthorizeErr   middlewareHanlderErrCode = "router-004"
 )
 
 type IMiddlewareHandler interface {
@@ -26,6 +28,7 @@ type IMiddlewareHandler interface {
 	Logger() fiber.Handler
 	JwtAuth() fiber.Handler
 	ParamsCheck() fiber.Handler
+	Authorize(expectRoleId ...int) fiber.Handler
 }
 
 type middlewarehanlder struct {
@@ -99,5 +102,35 @@ func (h *middlewarehanlder) ParamsCheck() fiber.Handler {
 			).Res()
 		}
 		return c.Next()
+	}
+}
+
+func (h *middlewarehanlder) Authorize(expectRoleId ...int) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		roleId, ok := c.Locals("userRoleId").(int)
+		if !ok {
+			return entities.NewResponse(c).Error(fiber.ErrBadRequest.Code, string(AuthorizeErr), "role id is not int").Res()
+		}
+
+		roles, err := h.middlerwaresUsecase.FindRole()
+		if err != nil {
+			return entities.NewResponse(c).Error(fiber.ErrInternalServerError.Code, string(AuthorizeErr), err.Error()).Res()
+		}
+
+		sum := 0
+
+		for _, v := range expectRoleId {
+			sum += v
+		}
+
+		expectValueBinary := utils.BinaryConverter(sum, len(roles))
+		userValueBinary := utils.BinaryConverter(roleId, len(roles))
+
+		for i := range userValueBinary {
+			if userValueBinary[i]&expectValueBinary[i] == 1 {
+				return c.Next()
+			}
+		}
+		return entities.NewResponse(c).Error(fiber.ErrUnauthorized.Code, string(AuthorizeErr), "no permission").Res()
 	}
 }
