@@ -2,6 +2,9 @@ package servers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/supakornn/hexagonal-go/modules/appinfo/appinfoHandlers"
+	"github.com/supakornn/hexagonal-go/modules/appinfo/appinfoRepositories"
+	"github.com/supakornn/hexagonal-go/modules/appinfo/appinfoUsecases"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresHandlers"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
@@ -14,6 +17,7 @@ import (
 type IModuleFactory interface {
 	MonitorModule()
 	UserModule()
+	AppinfoModule()
 }
 
 type moduleFactory struct {
@@ -54,4 +58,14 @@ func (m *moduleFactory) UserModule() {
 	router.Post("/signupadmin", handler.SignUpAdmin)
 	router.Get("/:userid", m.middleware.JwtAuth(), m.middleware.ParamsCheck(), handler.GetUserProfile)
 	router.Get("/admin/secret", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.GenerateAdminToken)
+}
+
+func (m *moduleFactory) AppinfoModule() {
+	repository := appinfoRepositories.AppinfoRepository(m.server.db)
+	usecase := appinfoUsecases.AppinfoUsecase(repository)
+	handler := appinfoHandlers.AppinfoHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/appinfo")
+
+	router.Get("/apikey", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.GenerateApiKey)
 }
