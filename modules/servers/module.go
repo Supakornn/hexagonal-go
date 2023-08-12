@@ -70,4 +70,6 @@ func (m *moduleFactory) AppinfoModule() {
 
 	router.Get("/apikey", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.GenerateApiKey)
 	router.Get("/categories", m.middleware.ApiKeyAuth(), handler.FindCategory)
+	router.Post("/categories", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.AddCategory)
+	router.Delete("/:category_id/categories", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.RemoveCategory)
 }
