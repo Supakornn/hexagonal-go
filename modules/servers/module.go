@@ -11,6 +11,9 @@ import (
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 	"github.com/supakornn/hexagonal-go/modules/monitor/monitorHandlers"
+	"github.com/supakornn/hexagonal-go/modules/products/productsHandlers"
+	"github.com/supakornn/hexagonal-go/modules/products/productsRepositories"
+	"github.com/supakornn/hexagonal-go/modules/products/productsUsecases"
 	"github.com/supakornn/hexagonal-go/modules/users/usersHandlers"
 	"github.com/supakornn/hexagonal-go/modules/users/usersRepositories"
 	"github.com/supakornn/hexagonal-go/modules/users/usersUsecases"
@@ -21,6 +24,7 @@ type IModuleFactory interface {
 	UserModule()
 	AppinfoModule()
 	FileModule()
+	ProductsModule()
 }
 
 type moduleFactory struct {
@@ -85,4 +89,14 @@ func (m *moduleFactory) FileModule() {
 
 	router.Post("/upload", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.UploadFiles)
 	router.Patch("/delete", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.DeleteFile)
+}
+func (m *moduleFactory) ProductsModule() {
+	filesUsecase := filesUsecases.FilesUsecase(m.server.cfg)
+	repository := productsRepositories.ProductsRepository(m.server.db, m.server.cfg, filesUsecase)
+	usecase := productsUsecases.ProductsUsecase(repository)
+	handler := productsHandlers.ProductsHandler(m.server.cfg, usecase, filesUsecase)
+
+	router := m.router.Group("/products")
+	_ = handler
+	_ = router
 }
