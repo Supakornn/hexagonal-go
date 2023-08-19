@@ -97,6 +97,6 @@ func (m *moduleFactory) ProductsModule() {
 	handler := productsHandlers.ProductsHandler(m.server.cfg, usecase, filesUsecase)
 
 	router := m.router.Group("/products")
-	_ = handler
-	_ = router
+
+	router.Get("/:product_id", m.middleware.ApiKeyAuth(), handler.FindOneProduct)
 }
