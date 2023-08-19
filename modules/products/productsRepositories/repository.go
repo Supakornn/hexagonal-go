@@ -70,16 +70,16 @@ func (r *prodictsRepository) FindOneProduct(productId string) (*products.Product
 		LIMIT 1
 	) AS "t";`
 
-	productByte := make([]byte, 0)
+	productBytes := make([]byte, 0)
 	product := &products.Product{
-		Image: make([]*entities.Image, 0),
+		Images: make([]*entities.Image, 0),
 	}
 
-	if err := r.db.Get(&productByte, query, productId); err != nil {
+	if err := r.db.Get(&productBytes, query, productId); err != nil {
 		return nil, fmt.Errorf("get product error: %w", err)
 	}
 
-	if err := json.Unmarshal(productByte, &product); err != nil {
+	if err := json.Unmarshal(productBytes, &product); err != nil {
 		return nil, fmt.Errorf("unmarshal product error: %w", err)
 	}
 
