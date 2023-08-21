@@ -9,27 +9,28 @@ import (
 	"github.com/supakornn/hexagonal-go/modules/entities"
 	"github.com/supakornn/hexagonal-go/modules/files/filesUsecases"
 	"github.com/supakornn/hexagonal-go/modules/products"
+	"github.com/supakornn/hexagonal-go/modules/products/productsPatterns"
 )
 
 type IProductsRepository interface {
 	FindOneProduct(productId string) (*products.Product, error)
 }
 
-type prodictsRepository struct {
+type productsRepository struct {
 	db          *sqlx.DB
 	cfg         config.Iconfig
 	fileUsecase filesUsecases.IFilesUsecase
 }
 
 func ProductsRepository(db *sqlx.DB, cfg config.Iconfig, fileUsecase filesUsecases.IFilesUsecase) IProductsRepository {
-	return &prodictsRepository{
+	return &productsRepository{
 		db:          db,
 		cfg:         cfg,
 		fileUsecase: fileUsecase,
 	}
 }
 
-func (r *prodictsRepository) FindOneProduct(productId string) (*products.Product, error) {
+func (r *productsRepository) FindOneProduct(productId string) (*products.Product, error) {
 	query := `
 	SELECT
 		to_jsonb("t")
@@ -84,4 +85,14 @@ func (r *prodictsRepository) FindOneProduct(productId string) (*products.Product
 	}
 
 	return product, nil
+}
+
+func (r *productsRepository) FindProduct(req *products.ProductFilter) ([]*products.Product, int) {
+	builder := productsPatterns.FindProductsBuilder(r.db, req)
+	engineer := productsPatterns.FindProductsEngineer(builder)
+
+	result := engineer.FindProduct().Result()
+	count := engineer.FindProduct().Count()
+
+	return result, count
 }
