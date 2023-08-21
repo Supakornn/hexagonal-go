@@ -14,6 +14,7 @@ import (
 
 type IProductsRepository interface {
 	FindOneProduct(productId string) (*products.Product, error)
+	FindProduct(req *products.ProductFilter) ([]*products.Product, int)
 }
 
 type productsRepository struct {
@@ -92,7 +93,7 @@ func (r *productsRepository) FindProduct(req *products.ProductFilter) ([]*produc
 	engineer := productsPatterns.FindProductsEngineer(builder)
 
 	result := engineer.FindProduct().Result()
-	count := engineer.FindProduct().Count()
+	count := engineer.CountProduct().Count()
 
 	return result, count
 }
