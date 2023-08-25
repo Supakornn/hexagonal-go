@@ -96,11 +96,14 @@ func (h *middlewarehanlder) JwtAuth() fiber.Handler {
 func (h *middlewarehanlder) ParamsCheck() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userId := c.Locals("userId")
-		if c.Params("userId") != userId {
+		if c.Locals("userRoleId").(int) == 2 {
+			return c.Next()
+		}
+		if c.Params("user_id") != userId {
 			return entities.NewResponse(c).Error(
 				fiber.ErrUnauthorized.Code,
 				string(paramsCheckErr),
-				"never gonna give you",
+				"never gonna give you up",
 			).Res()
 		}
 		return c.Next()

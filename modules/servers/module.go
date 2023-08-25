@@ -11,6 +11,9 @@ import (
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 	"github.com/supakornn/hexagonal-go/modules/monitor/monitorHandlers"
+	"github.com/supakornn/hexagonal-go/modules/orders/ordersHandlers.go"
+	"github.com/supakornn/hexagonal-go/modules/orders/ordersRepositories"
+	"github.com/supakornn/hexagonal-go/modules/orders/ordersUsecases.go"
 	"github.com/supakornn/hexagonal-go/modules/products/productsHandlers"
 	"github.com/supakornn/hexagonal-go/modules/products/productsRepositories"
 	"github.com/supakornn/hexagonal-go/modules/products/productsUsecases"
@@ -25,6 +28,7 @@ type IModuleFactory interface {
 	AppinfoModule()
 	FileModule()
 	ProductsModule()
+	OrdersModule()
 }
 
 type moduleFactory struct {
@@ -104,4 +108,22 @@ func (m *moduleFactory) ProductsModule() {
 	router.Post("/", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.AddProduct)
 	router.Patch("/:product_id", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.UpdateProduct)
 	router.Delete("/:product_id", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.DeleteProduct)
+}
+
+func (m *moduleFactory) OrdersModule() {
+	filesUsecases := filesUsecases.FilesUsecase(m.server.cfg)
+	productsRepositories := productsRepositories.ProductsRepository(m.server.db, m.server.cfg, filesUsecases)
+
+	ordersRepository := ordersRepositories.OrdersRepository(m.server.db)
+	ordersUsecase := ordersUsecases.OrdersUsecase(ordersRepository, productsRepositories)
+	ordersHandler := ordersHandlers.OrdersHandler(m.server.cfg, ordersUsecase)
+
+	router := m.router.Group("/orders")
+
+	router.Post("/", m.middleware.JwtAuth(), ordersHandler.InsertOrder)
+
+	router.Get("/", m.middleware.JwtAuth(), m.middleware.Authorize(2), ordersHandler.FindOrder)
+	router.Get("/:user_id/:order_id", m.middleware.JwtAuth(), m.middleware.ParamsCheck(), ordersHandler.FindOneOrder)
+
+	router.Patch("/:user_id/:order_id", m.middleware.JwtAuth(), m.middleware.ParamsCheck(), ordersHandler.UpdateOrder)
 }
