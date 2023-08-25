@@ -13,6 +13,7 @@ import (
 
 type IServer interface {
 	Start()
+	GetServer() *server
 }
 
 type server struct {
@@ -36,18 +37,22 @@ func NewServer(cfg config.Iconfig, db *sqlx.DB) IServer {
 	}
 }
 
+func (s *server) GetServer() *server {
+	return s
+}
+
 func (s *server) Start() {
 
-	m := InitMiddleware(s)
+	m := InitMiddlewares(s)
 	s.app.Use(m.Logger())
 	s.app.Use(m.Cors())
 
 	v1 := s.app.Group("v1")
 	modules := InitModule(v1, s, m)
 	modules.MonitorModule()
-	modules.UserModule()
+	modules.UsersModule()
 	modules.AppinfoModule()
-	modules.FileModule()
+	modules.FilesModule()
 	modules.ProductsModule()
 	modules.OrdersModule()
 

@@ -5,8 +5,6 @@ import (
 	"github.com/supakornn/hexagonal-go/modules/appinfo/appinfoHandlers"
 	"github.com/supakornn/hexagonal-go/modules/appinfo/appinfoRepositories"
 	"github.com/supakornn/hexagonal-go/modules/appinfo/appinfoUsecases"
-	"github.com/supakornn/hexagonal-go/modules/files/filesHandlers"
-	"github.com/supakornn/hexagonal-go/modules/files/filesUsecases"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresHandlers"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
@@ -14,9 +12,6 @@ import (
 	"github.com/supakornn/hexagonal-go/modules/orders/ordersHandlers.go"
 	"github.com/supakornn/hexagonal-go/modules/orders/ordersRepositories"
 	"github.com/supakornn/hexagonal-go/modules/orders/ordersUsecases.go"
-	"github.com/supakornn/hexagonal-go/modules/products/productsHandlers"
-	"github.com/supakornn/hexagonal-go/modules/products/productsRepositories"
-	"github.com/supakornn/hexagonal-go/modules/products/productsUsecases"
 	"github.com/supakornn/hexagonal-go/modules/users/usersHandlers"
 	"github.com/supakornn/hexagonal-go/modules/users/usersRepositories"
 	"github.com/supakornn/hexagonal-go/modules/users/usersUsecases"
@@ -24,10 +19,10 @@ import (
 
 type IModuleFactory interface {
 	MonitorModule()
-	UserModule()
+	UsersModule()
 	AppinfoModule()
-	FileModule()
-	ProductsModule()
+	FilesModule() IFilesModule
+	ProductsModule() IProductsModule
 	OrdersModule()
 }
 
@@ -37,15 +32,15 @@ type moduleFactory struct {
 	middleware middlewaresHandlers.IMiddlewareHandler
 }
 
-func InitModule(r fiber.Router, s *server, m middlewaresHandlers.IMiddlewareHandler) IModuleFactory {
+func InitModule(r fiber.Router, s *server, mid middlewaresHandlers.IMiddlewareHandler) IModuleFactory {
 	return &moduleFactory{
 		router:     r,
 		server:     s,
-		middleware: m,
+		middleware: mid,
 	}
 }
 
-func InitMiddleware(s *server) middlewaresHandlers.IMiddlewareHandler {
+func InitMiddlewares(s *server) middlewaresHandlers.IMiddlewareHandler {
 	repository := middlewaresRepositories.MiddlewaresRepo(s.db)
 	usecase := middlewaresUsecases.MiddlewaresUsecase(repository)
 	return middlewaresHandlers.MiddlewarsHandler(s.cfg, usecase)
@@ -53,22 +48,24 @@ func InitMiddleware(s *server) middlewaresHandlers.IMiddlewareHandler {
 
 func (m *moduleFactory) MonitorModule() {
 	handler := monitorHandlers.MonitorHandler(m.server.cfg)
+
 	m.router.Get("/", handler.HealthCheck)
 }
 
-func (m *moduleFactory) UserModule() {
+func (m *moduleFactory) UsersModule() {
 	repository := usersRepositories.UserRepository(m.server.db)
 	usecase := usersUsecases.UserUsecase(m.server.cfg, repository)
 	handler := usersHandlers.UserHandler(m.server.cfg, usecase)
 
 	router := m.router.Group("/users")
+
 	router.Post("/signup", m.middleware.ApiKeyAuth(), handler.SignUpCustomer)
-	router.Post("/signin", handler.SignIn)
+	router.Post("/signin", m.middleware.ApiKeyAuth(), handler.SignIn)
 	router.Post("/refresh", m.middleware.ApiKeyAuth(), handler.RefreshPassport)
 	router.Post("/signout", m.middleware.ApiKeyAuth(), handler.SignOut)
+	router.Post("/signup-admin", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.SignOut)
 
-	router.Post("/signupadmin", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.SignUpAdmin)
-	router.Get("/:userid", m.middleware.JwtAuth(), m.middleware.ParamsCheck(), handler.GetUserProfile)
+	router.Get("/:user_id", m.middleware.JwtAuth(), m.middleware.ParamsCheck(), handler.GetUserProfile)
 	router.Get("/admin/secret", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.GenerateAdminToken)
 }
 
@@ -79,43 +76,17 @@ func (m *moduleFactory) AppinfoModule() {
 
 	router := m.router.Group("/appinfo")
 
-	router.Get("/apikey", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.GenerateApiKey)
-	router.Get("/categories", m.middleware.ApiKeyAuth(), handler.FindCategory)
 	router.Post("/categories", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.AddCategory)
+
+	router.Get("/categories", m.middleware.ApiKeyAuth(), handler.FindCategory)
+	router.Get("/apikey", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.GenerateApiKey)
+
 	router.Delete("/:category_id/categories", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.RemoveCategory)
 }
 
-func (m *moduleFactory) FileModule() {
-	usecase := filesUsecases.FilesUsecase(m.server.cfg)
-	handler := filesHandlers.FilesHandler(m.server.cfg, usecase)
-
-	router := m.router.Group("/files")
-
-	router.Post("/upload", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.UploadFiles)
-	router.Patch("/delete", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.DeleteFile)
-}
-
-func (m *moduleFactory) ProductsModule() {
-	filesUsecase := filesUsecases.FilesUsecase(m.server.cfg)
-	repository := productsRepositories.ProductsRepository(m.server.db, m.server.cfg, filesUsecase)
-	usecase := productsUsecases.ProductsUsecase(repository)
-	handler := productsHandlers.ProductsHandler(m.server.cfg, usecase, filesUsecase)
-
-	router := m.router.Group("/products")
-
-	router.Get("/", m.middleware.ApiKeyAuth(), handler.FindProduct)
-	router.Get("/:product_id", m.middleware.ApiKeyAuth(), handler.FindOneProduct)
-	router.Post("/", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.AddProduct)
-	router.Patch("/:product_id", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.UpdateProduct)
-	router.Delete("/:product_id", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.DeleteProduct)
-}
-
 func (m *moduleFactory) OrdersModule() {
-	filesUsecases := filesUsecases.FilesUsecase(m.server.cfg)
-	productsRepositories := productsRepositories.ProductsRepository(m.server.db, m.server.cfg, filesUsecases)
-
 	ordersRepository := ordersRepositories.OrdersRepository(m.server.db)
-	ordersUsecase := ordersUsecases.OrdersUsecase(ordersRepository, productsRepositories)
+	ordersUsecase := ordersUsecases.OrdersUsecase(ordersRepository, m.ProductsModule().Repository())
 	ordersHandler := ordersHandlers.OrdersHandler(m.server.cfg, ordersUsecase)
 
 	router := m.router.Group("/orders")
