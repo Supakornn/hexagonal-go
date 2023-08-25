@@ -59,7 +59,7 @@ func (m *moduleFactory) UserModule() {
 
 	router := m.router.Group("/users")
 	router.Post("/signup", m.middleware.ApiKeyAuth(), handler.SignUpCustomer)
-	router.Post("/signin", m.middleware.ApiKeyAuth(), handler.SignIn)
+	router.Post("/signin", handler.SignIn)
 	router.Post("/refresh", m.middleware.ApiKeyAuth(), handler.RefreshPassport)
 	router.Post("/signout", m.middleware.ApiKeyAuth(), handler.SignOut)
 
@@ -90,6 +90,7 @@ func (m *moduleFactory) FileModule() {
 	router.Post("/upload", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.UploadFiles)
 	router.Patch("/delete", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.DeleteFile)
 }
+
 func (m *moduleFactory) ProductsModule() {
 	filesUsecase := filesUsecases.FilesUsecase(m.server.cfg)
 	repository := productsRepositories.ProductsRepository(m.server.db, m.server.cfg, filesUsecase)
@@ -99,5 +100,6 @@ func (m *moduleFactory) ProductsModule() {
 	router := m.router.Group("/products")
 
 	router.Get("/", m.middleware.ApiKeyAuth(), handler.FindProduct)
+	router.Post("/", m.middleware.JwtAuth(), m.middleware.Authorize(2), handler.AddProduct)
 	router.Get("/:product_id", m.middleware.ApiKeyAuth(), handler.FindOneProduct)
 }
