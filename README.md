@@ -1,21 +1,23 @@
+# Start DB
 ```
 docker run --name db -e POSTGRES_USER=? -e POSTGRES_PASSWORD=? -p 4444:5432 -d postgres:alpine
 docker exec -it db
 psql -U USER?
 CREATE DATABASE db;
 ```
-
+# Migrate DV
 ```
 migrate -database 'postgres://user?:pass?@0.0.0.0:4444/db?sslmode=disable' -source file://? -verbose up
 migrate -database 'postgres://user?:pass?@0.0.0.0:4444/db?sslmode=disable' -source file://? -verbose down
 ```
-
+# Build
 ```
 docker build -t asia.gcr.io/project-id/container-bucket .
 docker push asia.gcr.io/project-id/container-bucket
 gcloud auth configure-docker
 ```
 
+#ENV
 ```ENV
 APP_HOST=
 APP_PORT=
