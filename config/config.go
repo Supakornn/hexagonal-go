@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Load .env
 func LoadConfig(path string) IConfig {
 	envMap, err := godotenv.Read(path)
 	if err != nil {
