@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/Supakornn/go-api/config"
+	"github.com/Supakornn/go-api/modules/servers"
 	"github.com/Supakornn/go-api/pkg/databaes"
 )
 
@@ -19,4 +20,6 @@ func main() {
 	cfg := config.LoadConfig(envPath())
 	db := databaes.DbConnect(cfg.Db())
 	defer db.Close()
+
+	servers.NewServer(cfg, db).Start()
 }
