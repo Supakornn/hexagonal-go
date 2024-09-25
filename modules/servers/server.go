@@ -37,6 +37,10 @@ func NewServer(cfg config.IConfig, db *sqlx.DB) IServer {
 }
 
 func (s *server) Start() {
+	v1 := s.app.Group("/v1")
+	modules := InitModule(v1, s)
+	modules.MonitorModule()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -47,4 +51,5 @@ func (s *server) Start() {
 
 	log.Printf("Server is running on url:%s", s.cfg.App().Url())
 	s.app.Listen(s.cfg.App().Url())
+
 }
