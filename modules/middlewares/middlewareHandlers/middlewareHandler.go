@@ -2,13 +2,21 @@ package middlewareHandlers
 
 import (
 	"github.com/Supakornn/go-api/config"
+	"github.com/Supakornn/go-api/modules/entities"
 	"github.com/Supakornn/go-api/modules/middlewares/middlewareUsecases"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
+type middlewareHandlersErrCode string
+
+const (
+	routerCheckErr middlewareHandlersErrCode = "middleware-001"
+)
+
 type IMiddlewaresHandler interface {
 	Cors() fiber.Handler
+	RouterCheck() fiber.Handler
 }
 
 type middlewaresHandler struct {
@@ -33,4 +41,14 @@ func (h *middlewaresHandler) Cors() fiber.Handler {
 		ExposeHeaders:    "",
 		MaxAge:           0,
 	})
+}
+
+func (h *middlewaresHandler) RouterCheck() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		return entities.NewResponse(c).Error(
+			fiber.ErrNotFound.Code,
+			string(routerCheckErr),
+			"router not found",
+		).Res()
+	}
 }
