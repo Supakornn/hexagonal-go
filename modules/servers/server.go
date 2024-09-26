@@ -39,6 +39,7 @@ func NewServer(cfg config.IConfig, db *sqlx.DB) IServer {
 func (s *server) Start() {
 
 	middlewares := InitMiddlewares(s)
+	s.app.Use(middlewares.Logger())
 	s.app.Use(middlewares.Cors())
 
 	v1 := s.app.Group("/v1")
@@ -57,5 +58,4 @@ func (s *server) Start() {
 
 	log.Printf("Server is running on url:%s", s.cfg.App().Url())
 	s.app.Listen(s.cfg.App().Url())
-
 }
