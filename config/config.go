@@ -10,7 +10,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Load .env
 func LoadConfig(path string) IConfig {
 	envMap, err := godotenv.Read(path)
 	if err != nil {
@@ -223,8 +222,8 @@ type jwt struct {
 	adminKey         string
 	secretKey        string
 	apiKey           string
-	accessExpiresAt  int //sec
-	refreshExpiresAt int //sec
+	accessExpiresAt  int //seconds
+	refreshExpiresAt int //seconds
 }
 
 func (c *config) Jwt() IJwtConfig {
