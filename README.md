@@ -1,3 +1,11 @@
-## Database
+# E-Commerce REST APIs With GO
 
-<iframe width="560" height="315" src='https://dbdiagram.io/e/66d444c6eef7e08f0e57c865/66f924ed3430cb846cf6b320'> </iframe>
+This is a simple E-Commerce REST APIs project using Golang. This project is built using the following technologies:
+
+- Golang (Fiber)
+- Docker
+- PostgreSQL
+
+## Database Schema
+
+<a href="https://dbdiagram.io/d/go-api-66d444c6eef7e08f0e57c865"><img src="./pictures/database.png"/></a>
