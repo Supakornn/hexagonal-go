@@ -1,9 +1,9 @@
-package middlewareHandlers
+package middlewaresHandlers
 
 import (
-	"github.com/Supakornn/go-api/config"
-	"github.com/Supakornn/go-api/modules/entities"
-	"github.com/Supakornn/go-api/modules/middlewares/middlewareUsecases"
+	"github.com/Supakornn/hexagonal-go/config"
+	"github.com/Supakornn/hexagonal-go/modules/entities"
+	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -23,10 +23,10 @@ type IMiddlewaresHandler interface {
 
 type middlewaresHandler struct {
 	cfg               config.IConfig
-	middlewareUsecase middlewareUsecases.IMiddlewaresUsecase
+	middlewareUsecase middlewaresUsecases.IMiddlewaresUsecase
 }
 
-func MiddlewaresHandler(cfg config.IConfig, middlewareUsecase middlewareUsecases.IMiddlewaresUsecase) IMiddlewaresHandler {
+func MiddlewaresHandler(cfg config.IConfig, middlewareUsecase middlewaresUsecases.IMiddlewaresUsecase) IMiddlewaresHandler {
 	return &middlewaresHandler{
 		cfg:               cfg,
 		middlewareUsecase: middlewareUsecase,

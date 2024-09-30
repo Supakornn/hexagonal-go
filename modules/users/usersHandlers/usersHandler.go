@@ -1,11 +1,21 @@
 package usersHandlers
 
 import (
-	"github.com/Supakornn/go-api/config"
-	"github.com/Supakornn/go-api/modules/users/usersUsecases"
+	"github.com/Supakornn/hexagonal-go/config"
+	"github.com/Supakornn/hexagonal-go/modules/entities"
+	"github.com/Supakornn/hexagonal-go/modules/users"
+	"github.com/Supakornn/hexagonal-go/modules/users/usersUsecases"
+	"github.com/gofiber/fiber/v2"
+)
+
+type userHandlerErrCode string
+
+const (
+	signUpCustomerErr userHandlerErrCode = "users-001"
 )
 
 type IUserHandler interface {
+	SignUpCustomer(c *fiber.Ctx) error
 }
 
 type userHandler struct {
@@ -13,6 +23,54 @@ type userHandler struct {
 	userUsecase usersUsecases.IUserUsecase
 }
 
-func UserHandler() IUserHandler {
-	return &userHandler{}
+func UsersHandler(cfg config.IConfig, userUsecase usersUsecases.IUserUsecase) IUserHandler {
+	return &userHandler{
+		cfg:         cfg,
+		userUsecase: userUsecase,
+	}
+}
+
+func (h *userHandler) SignUpCustomer(c *fiber.Ctx) error {
+	req := new(users.UserRegisterReq)
+	if err := c.BodyParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(signUpCustomerErr),
+			err.Error(),
+		).Res()
+	}
+
+	if !req.IsEmail() {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(signUpCustomerErr),
+			"email is invalid",
+		).Res()
+	}
+
+	result, err := h.userUsecase.InsertCustomer(req)
+	if err != nil {
+		switch err.Error() {
+		case "username already exists":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(signUpCustomerErr),
+				err.Error(),
+			).Res()
+		case "email already exists":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(signUpCustomerErr),
+				err.Error(),
+			).Res()
+		default:
+			return entities.NewResponse(c).Error(
+				fiber.ErrInternalServerError.Code,
+				string(signUpCustomerErr),
+				err.Error(),
+			).Res()
+		}
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusCreated, result).Res()
 }

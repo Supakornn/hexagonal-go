@@ -1,7 +1,7 @@
-package middlewareUsecases
+package middlewaresUsecases
 
 import (
-	"github.com/Supakornn/go-api/modules/middlewares/middlewaresRepositories"
+	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 )
 
 type IMiddlewaresUsecase interface {

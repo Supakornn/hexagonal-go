@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Supakornn/go-api/pkg/utils"
+	"github.com/Supakornn/hexagonal-go/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
 

@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/Supakornn/go-api/config"
-	"github.com/Supakornn/go-api/modules/servers"
-	"github.com/Supakornn/go-api/pkg/databaes"
+	"github.com/Supakornn/hexagonal-go/config"
+	"github.com/Supakornn/hexagonal-go/modules/servers"
+	"github.com/Supakornn/hexagonal-go/pkg/databaes"
 )
 
 func envPath() string {

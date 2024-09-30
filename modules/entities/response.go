@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/Supakornn/go-api/pkg/logger"
+	"github.com/Supakornn/hexagonal-go/pkg/logger"
 	"github.com/gofiber/fiber/v2"
 )
 

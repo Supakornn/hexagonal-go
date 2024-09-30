@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/Supakornn/go-api/config"
+	"github.com/Supakornn/hexagonal-go/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
@@ -45,6 +45,7 @@ func (s *server) Start() {
 	v1 := s.app.Group("/v1")
 	modules := InitModule(v1, s, middlewares)
 	modules.MonitorModule()
+	modules.UsersModule()
 
 	s.app.Use(middlewares.RouterCheck())
 

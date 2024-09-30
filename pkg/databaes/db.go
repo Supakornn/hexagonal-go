@@ -3,7 +3,7 @@ package databaes
 import (
 	"log"
 
-	"github.com/Supakornn/go-api/config"
+	"github.com/Supakornn/hexagonal-go/config"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"

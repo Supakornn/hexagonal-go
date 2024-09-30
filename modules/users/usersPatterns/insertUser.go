@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Supakornn/go-api/modules/users"
+	"github.com/Supakornn/hexagonal-go/modules/users"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -59,13 +59,14 @@ func (f *userReq) Customer() (IInsertUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	query := `INSERT INTO "users" (
+	query := `
+	INSERT INTO "users" (
 		"email",
 		"password",
-		"username"
+		"username",
 		"role_id"
 	)
-	VALUES 
+	VALUES
 		($1, $2, $3, 1)
 	RETURNING "id";`
 
@@ -75,7 +76,7 @@ func (f *userReq) Customer() (IInsertUser, error) {
 		f.req.Email,
 		f.req.Password,
 		f.req.Username,
-		1).Scan(&f.Id); err != nil {
+	).Scan(&f.Id); err != nil {
 		switch err.Error() {
 		case "ERROR: duplicate key value violates unique constraint \"users_username_key\" (SQLSTATE 23505)":
 			return nil, fmt.Errorf("username already exists")
@@ -92,10 +93,11 @@ func (f *userReq) Admin() (IInsertUser, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	query := `INSERT INTO "users" (
+	query := `
+	INSERT INTO "users" (
 		"email",
 		"password",
-		"username"
+		"username",
 		"role_id"
 	)
 	VALUES 
@@ -108,7 +110,7 @@ func (f *userReq) Admin() (IInsertUser, error) {
 		f.req.Email,
 		f.req.Password,
 		f.req.Username,
-		1).Scan(&f.Id); err != nil {
+	).Scan(&f.Id); err != nil {
 		switch err.Error() {
 		case "ERROR: duplicate key value violates unique constraint \"users_username_key\" (SQLSTATE 23505)":
 			return nil, fmt.Errorf("username already exists")
@@ -132,7 +134,7 @@ func (f *userReq) Result() (*users.UserPassport, error) {
 		SELECT 
 			"u"."id",
 			"u"."email",
-			"u"."username"
+			"u"."username",
 			"u"."role_id"
 		FROM "users" "u"
 		WHERE "u"."id" = $1
