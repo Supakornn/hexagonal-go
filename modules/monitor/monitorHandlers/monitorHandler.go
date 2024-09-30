@@ -1,9 +1,9 @@
 package monitorHandlers
 
 import (
-	"github.com/Supakornn/go-api/config"
-	"github.com/Supakornn/go-api/modules/entities"
-	"github.com/Supakornn/go-api/modules/monitor"
+	"github.com/Supakornn/hexagonal-go/config"
+	"github.com/Supakornn/hexagonal-go/modules/entities"
+	"github.com/Supakornn/hexagonal-go/modules/monitor"
 	"github.com/gofiber/fiber/v2"
 )
 

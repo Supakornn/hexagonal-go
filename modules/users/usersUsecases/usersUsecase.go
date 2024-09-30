@@ -1,11 +1,13 @@
 package usersUsecases
 
 import (
-	"github.com/Supakornn/go-api/config"
-	"github.com/Supakornn/go-api/modules/users/usersRepositories"
+	"github.com/Supakornn/hexagonal-go/config"
+	"github.com/Supakornn/hexagonal-go/modules/users"
+	"github.com/Supakornn/hexagonal-go/modules/users/usersRepositories"
 )
 
 type IUserUsecase interface {
+	InsertCustomer(req *users.UserRegisterReq) (*users.UserPassport, error)
 }
 
 type userUsecase struct {
@@ -13,9 +15,22 @@ type userUsecase struct {
 	userRepository usersRepositories.IUserRepository
 }
 
-func UserUsecase(cfg config.IConfig, userRepository usersRepositories.IUserRepository) IUserUsecase {
+func UsersUsecase(cfg config.IConfig, userRepository usersRepositories.IUserRepository) IUserUsecase {
 	return &userUsecase{
 		cfg:            cfg,
 		userRepository: userRepository,
 	}
+}
+
+func (u *userUsecase) InsertCustomer(req *users.UserRegisterReq) (*users.UserPassport, error) {
+	if err := req.BcryptHashing(); err != nil {
+		return nil, err
+	}
+
+	result, err := u.userRepository.InsertUser(req, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

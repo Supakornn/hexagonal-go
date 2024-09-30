@@ -1,4 +1,4 @@
-module github.com/Supakornn/go-api
+module github.com/Supakornn/hexagonal-go
 
 go 1.22.6
 

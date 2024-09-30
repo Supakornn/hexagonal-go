@@ -1,24 +1,28 @@
 package servers
 
 import (
-	"github.com/Supakornn/go-api/modules/middlewares/middlewareHandlers"
-	"github.com/Supakornn/go-api/modules/middlewares/middlewareUsecases"
-	"github.com/Supakornn/go-api/modules/middlewares/middlewaresRepositories"
-	"github.com/Supakornn/go-api/modules/monitor/monitorHandlers"
+	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresHandlers"
+	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
+	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
+	"github.com/Supakornn/hexagonal-go/modules/monitor/monitorHandlers"
+	"github.com/Supakornn/hexagonal-go/modules/users/usersHandlers"
+	"github.com/Supakornn/hexagonal-go/modules/users/usersRepositories"
+	"github.com/Supakornn/hexagonal-go/modules/users/usersUsecases"
 	"github.com/gofiber/fiber/v2"
 )
 
 type IModuleFactory interface {
 	MonitorModule()
+	UsersModule()
 }
 
 type moduleFactory struct {
 	router      fiber.Router
 	server      *server
-	middlewares middlewareHandlers.IMiddlewaresHandler
+	middlewares middlewaresHandlers.IMiddlewaresHandler
 }
 
-func InitModule(r fiber.Router, s *server, m middlewareHandlers.IMiddlewaresHandler) IModuleFactory {
+func InitModule(r fiber.Router, s *server, m middlewaresHandlers.IMiddlewaresHandler) IModuleFactory {
 	return &moduleFactory{
 		router:      r,
 		server:      s,
@@ -26,13 +30,23 @@ func InitModule(r fiber.Router, s *server, m middlewareHandlers.IMiddlewaresHand
 	}
 }
 
-func InitMiddlewares(s *server) middlewareHandlers.IMiddlewaresHandler {
+func InitMiddlewares(s *server) middlewaresHandlers.IMiddlewaresHandler {
 	repository := middlewaresRepositories.MiddlewaresRepository(s.db)
-	usecase := middlewareUsecases.MiddlewaresUsecase(repository)
-	return middlewareHandlers.MiddlewaresHandler(s.cfg, usecase)
+	usecase := middlewaresUsecases.MiddlewaresUsecase(repository)
+	return middlewaresHandlers.MiddlewaresHandler(s.cfg, usecase)
 }
 
 func (m *moduleFactory) MonitorModule() {
 	handler := monitorHandlers.MonitorHandlers(m.server.cfg)
 	m.router.Get("/", handler.HealthCheck)
+}
+
+func (m *moduleFactory) UsersModule() {
+	repository := usersRepositories.UsersRepository(m.server.db)
+	usecase := usersUsecases.UsersUsecase(m.server.cfg, repository)
+	handler := usersHandlers.UsersHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/users")
+
+	router.Post("/signup", handler.SignUpCustomer)
 }

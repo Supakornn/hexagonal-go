@@ -15,9 +15,9 @@ type User struct {
 }
 
 type UserRegisterReq struct {
-	Email    string `db: "email" json: "email"`
-	Password string `db: "password" json: "password"`
-	Username string `db: "username" json: "username"`
+	Email    string `db: "email" json: "email" form:"email"`
+	Password string `db: "password" json: "password" form:"password"`
+	Username string `db: "username" json: "username" form:"username"`
 }
 
 type UserPassport struct {
