@@ -1,7 +1,9 @@
 package usersRepositories
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/Supakornn/hexagonal-go/modules/users"
 	"github.com/Supakornn/hexagonal-go/modules/users/usersPatterns"
@@ -11,6 +13,7 @@ import (
 type IUserRepository interface {
 	InsertUser(req *users.UserRegisterReq, isAdmin bool) (*users.UserPassport, error)
 	FindOneUserByEmail(email string) (*users.UserCredentialCheck, error)
+	InsertOauth(req *users.UserPassport) error
 }
 
 type userRepository struct {
@@ -68,4 +71,29 @@ func (r *userRepository) FindOneUserByEmail(email string) (*users.UserCredential
 	}
 
 	return user, nil
+}
+
+func (r *userRepository) InsertOauth(req *users.UserPassport) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	query := `
+	INSERT INTO "oauth" (
+		"userid",	
+		"refresh_token",
+		"access_token"
+	)
+	VALUES ($1, $2, $3)
+	RETURNING "id";`
+
+	if err := r.db.QueryRowContext(ctx,
+		query,
+		req.User.ID,
+		req.Token.RefreshToken,
+		req.Token.AccessToken,
+	).Scan(&req.Token.Id); err != nil {
+		fmt.Printf("insert oauth failed: %v\n", err)
+	}
+
+	return nil
 }
