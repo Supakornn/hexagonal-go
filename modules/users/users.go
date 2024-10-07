@@ -26,8 +26,8 @@ type UserPassport struct {
 
 type UserToken struct {
 	Id           string `db:"id" json:"id"`
-	AccessToken  string `db:"access_token" json:"access_token`
-	RefreshToken string `db:"refresh_token" json:"refresh_token`
+	AccessToken  string `db:"access_token" json:"access_token"`
+	RefreshToken string `db:"refresh_token" json:"refresh_token"`
 }
 
 type UserCredential struct {
