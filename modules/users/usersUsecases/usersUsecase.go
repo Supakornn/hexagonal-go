@@ -6,6 +6,7 @@ import (
 	"github.com/Supakornn/hexagonal-go/config"
 	"github.com/Supakornn/hexagonal-go/modules/users"
 	"github.com/Supakornn/hexagonal-go/modules/users/usersRepositories"
+	"github.com/Supakornn/hexagonal-go/pkg/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -49,6 +50,16 @@ func (u *userUsecase) GetPassport(req *users.UserCredential) (*users.UserPasspor
 		return nil, fmt.Errorf("password is incorrect")
 	}
 
+	accessToken, err := auth.NewAuth(auth.Access, u.cfg.Jwt(), &users.UserClaims{
+		Id:     user.Id,
+		RoleId: user.RoleId,
+	})
+
+	refreshToken, err := auth.NewAuth(auth.Refresh, u.cfg.Jwt(), &users.UserClaims{
+		Id:     user.Id,
+		RoleId: user.RoleId,
+	})
+
 	passport := &users.UserPassport{
 		User: &users.User{
 			ID:       user.Id,
@@ -56,7 +67,10 @@ func (u *userUsecase) GetPassport(req *users.UserCredential) (*users.UserPasspor
 			Username: user.Username,
 			RoleId:   user.RoleId,
 		},
-		Token: nil,
+		Token: &users.UserToken{
+			AccessToken:  accessToken.SignToken(),
+			RefreshToken: refreshToken.SignToken(),
+		},
 	}
 
 	return passport, nil
