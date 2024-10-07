@@ -43,6 +43,11 @@ type UserCredentialCheck struct {
 	RoleId   int    `db:"role_id"`
 }
 
+type UserClaims struct {
+	Id     string `db:"id" json:"id" form:"id"`
+	RoleId int    `db:"role_id" json:"role" form:"role_id"`
+}
+
 func (obj *UserRegisterReq) BcryptHashing() error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(obj.Password), 10)
 	if err != nil {
