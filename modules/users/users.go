@@ -48,6 +48,10 @@ type UserClaims struct {
 	RoleId int    `db:"role_id" json:"role" form:"role_id"`
 }
 
+type UserRefreshCredential struct {
+	RefreshToken string `json:"refresh_token" form:"refresh_token"`
+}
+
 func (obj *UserRegisterReq) BcryptHashing() error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(obj.Password), 10)
 	if err != nil {
