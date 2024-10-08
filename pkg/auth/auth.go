@@ -72,6 +72,24 @@ func ParseToken(cfg config.IJwtConfig, tokenString string) (*authMapClaims, erro
 	}
 }
 
+func RepeatToken(cfg config.IJwtConfig, claims *users.UserClaims, exp int64) string {
+	obj := &auth{
+		cfg: cfg,
+		mapClaims: &authMapClaims{
+			Claims: claims,
+			RegisteredClaims: jwt.RegisteredClaims{
+				Issuer:    "hexagonal-go",
+				Subject:   "access-token",
+				Audience:  []string{"customer", "admin"},
+				ExpiresAt: jwtTimeRepeatAdapter(exp),
+				NotBefore: jwt.NewNumericDate(time.Now()),
+				IssuedAt:  jwt.NewNumericDate(time.Now()),
+			},
+		},
+	}
+	return obj.SignToken()
+}
+
 func NewAuth(tokenType TokenType, cfg config.IJwtConfig, claims *users.UserClaims) (IAuth, error) {
 	switch tokenType {
 	case Access:

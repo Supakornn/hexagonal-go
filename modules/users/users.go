@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-	ID       string `db:"id" json:"id"`
+	Id       string `db:"id" json:"id"`
 	Email    string `db:"email" json:"email"`
 	Username string `db:"username" json:"username"`
 	RoleId   int    `db:"role_id" json:"role_id"`
@@ -50,6 +50,11 @@ type UserClaims struct {
 
 type UserRefreshCredential struct {
 	RefreshToken string `json:"refresh_token" form:"refresh_token"`
+}
+
+type Oauth struct {
+	Id     string `db:"id" json:"id"`
+	UserId string `db:"userid" json:"userid"`
 }
 
 func (obj *UserRegisterReq) BcryptHashing() error {
