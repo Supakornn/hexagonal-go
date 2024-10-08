@@ -8,31 +8,33 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type userHandlerErrCode string
+type usersHandlerErrCode string
 
 const (
-	signUpCustomerErr userHandlerErrCode = "users-001"
-	signInErr         userHandlerErrCode = "users-002"
+	signUpCustomerErr  usersHandlerErrCode = "users-001"
+	signInErr          usersHandlerErrCode = "users-002"
+	refreshPassportErr usersHandlerErrCode = "users-003"
 )
 
-type IUserHandler interface {
+type IUsersHandler interface {
 	SignUpCustomer(c *fiber.Ctx) error
 	SignIn(c *fiber.Ctx) error
+	RefreshPassport(c *fiber.Ctx) error
 }
 
-type userHandler struct {
-	cfg         config.IConfig
-	userUsecase usersUsecases.IUserUsecase
+type usersHandler struct {
+	cfg          config.IConfig
+	usersUsecase usersUsecases.IUsersUsecase
 }
 
-func UsersHandler(cfg config.IConfig, userUsecase usersUsecases.IUserUsecase) IUserHandler {
-	return &userHandler{
-		cfg:         cfg,
-		userUsecase: userUsecase,
+func UsersHandler(cfg config.IConfig, usersUsecase usersUsecases.IUsersUsecase) IUsersHandler {
+	return &usersHandler{
+		cfg:          cfg,
+		usersUsecase: usersUsecase,
 	}
 }
 
-func (h *userHandler) SignUpCustomer(c *fiber.Ctx) error {
+func (h *usersHandler) SignUpCustomer(c *fiber.Ctx) error {
 	req := new(users.UserRegisterReq)
 	if err := c.BodyParser(req); err != nil {
 		return entities.NewResponse(c).Error(
@@ -50,7 +52,7 @@ func (h *userHandler) SignUpCustomer(c *fiber.Ctx) error {
 		).Res()
 	}
 
-	result, err := h.userUsecase.InsertCustomer(req)
+	result, err := h.usersUsecase.InsertCustomer(req)
 	if err != nil {
 		switch err.Error() {
 		case "username already exists":
@@ -77,7 +79,7 @@ func (h *userHandler) SignUpCustomer(c *fiber.Ctx) error {
 	return entities.NewResponse(c).Success(fiber.StatusCreated, result).Res()
 }
 
-func (h *userHandler) SignIn(c *fiber.Ctx) error {
+func (h *usersHandler) SignIn(c *fiber.Ctx) error {
 	req := new(users.UserCredential)
 	if err := c.BodyParser(req); err != nil {
 		return entities.NewResponse(c).Error(
@@ -87,11 +89,33 @@ func (h *userHandler) SignIn(c *fiber.Ctx) error {
 		).Res()
 	}
 
-	passport, err := h.userUsecase.GetPassport(req)
+	passport, err := h.usersUsecase.GetPassport(req)
 	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
 			string(signInErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, passport).Res()
+}
+
+func (h *usersHandler) RefreshPassport(c *fiber.Ctx) error {
+	req := new(users.UserRefreshCredential)
+	if err := c.BodyParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(refreshPassportErr),
+			err.Error(),
+		).Res()
+	}
+
+	passport, err := h.usersUsecase.RefreshPassport(req)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(refreshPassportErr),
 			err.Error(),
 		).Res()
 	}
