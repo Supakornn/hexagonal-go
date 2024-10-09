@@ -25,12 +25,20 @@ type auth struct {
 	cfg       config.IJwtConfig
 }
 
+type admin struct {
+	*auth
+}
+
 type authMapClaims struct {
 	Claims *users.UserClaims `json:"claims"`
 	jwt.RegisteredClaims
 }
 
 type IAuth interface {
+	SignToken() string
+}
+
+type IAdmin interface {
 	SignToken() string
 }
 
@@ -48,6 +56,12 @@ func (a *auth) SignToken() string {
 	return ss
 }
 
+func (a *admin) SignToken() string {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, a.mapClaims)
+	ss, _ := token.SignedString(a.cfg.AdminKey())
+	return ss
+}
+
 func ParseToken(cfg config.IJwtConfig, tokenString string) (*authMapClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &authMapClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -55,6 +69,32 @@ func ParseToken(cfg config.IJwtConfig, tokenString string) (*authMapClaims, erro
 		}
 		return cfg.SecretKey(), nil
 	})
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenMalformed) {
+			return nil, fmt.Errorf("token format is invalid")
+		} else if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, fmt.Errorf("token is expired")
+		} else {
+			return nil, fmt.Errorf("token is invalid")
+		}
+	}
+
+	if claims, ok := token.Claims.(*authMapClaims); ok {
+		return claims, nil
+	} else {
+		return nil, fmt.Errorf("claims is invalid")
+	}
+}
+
+func ParseAdminToken(cfg config.IJwtConfig, tokenString string) (*authMapClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &authMapClaims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("signing method is invalid")
+		}
+		return cfg.AdminKey(), nil
+	})
+
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenMalformed) {
 			return nil, fmt.Errorf("token format is invalid")
@@ -97,6 +137,7 @@ func NewAuth(tokenType TokenType, cfg config.IJwtConfig, claims *users.UserClaim
 	case Refresh:
 		return newRefreshToken(cfg, claims), nil
 	case Admin:
+		return newAdminToken(cfg), nil
 	case Apikey:
 	default:
 		return nil, fmt.Errorf("token type is invalid")
@@ -134,6 +175,25 @@ func newRefreshToken(cfg config.IJwtConfig, claims *users.UserClaims) IAuth {
 				ExpiresAt: jwtTimeDurationCal(cfg.RefreshExpiresAt()),
 				NotBefore: jwt.NewNumericDate(time.Now()),
 				IssuedAt:  jwt.NewNumericDate(time.Now()),
+			},
+		},
+	}
+}
+
+func newAdminToken(cfg config.IJwtConfig) IAuth {
+	return &admin{
+		auth: &auth{
+			cfg: cfg,
+			mapClaims: &authMapClaims{
+				Claims: nil,
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    "hexagonal-go",
+					Subject:   "admin-token",
+					Audience:  []string{"admin"},
+					ExpiresAt: jwtTimeDurationCal(300),
+					NotBefore: jwt.NewNumericDate(time.Now()),
+					IssuedAt:  jwt.NewNumericDate(time.Now()),
+				},
 			},
 		},
 	}
