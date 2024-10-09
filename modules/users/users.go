@@ -57,6 +57,10 @@ type Oauth struct {
 	UserId string `db:"userid" json:"userid"`
 }
 
+type UserRemoveCredential struct {
+	OauthId string `json:"oauth_id" form:"oauth_id"`
+}
+
 func (obj *UserRegisterReq) BcryptHashing() error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(obj.Password), 10)
 	if err != nil {
