@@ -16,6 +16,7 @@ type IUsersUsecase interface {
 	RefreshPassport(req *users.UserRefreshCredential) (*users.UserPassport, error)
 	DeleteOauth(oauthId string) error
 	InsertAdmin(req *users.UserRegisterReq) (*users.UserPassport, error)
+	GetProfile(userId string) (*users.User, error)
 }
 
 type usersUsecase struct {
@@ -143,6 +144,12 @@ func (u *usersUsecase) RefreshPassport(req *users.UserRefreshCredential) (*users
 func (u *usersUsecase) DeleteOauth(oauthId string) error {
 	return u.usersRepository.DeleteOauth(oauthId)
 }
+
 func (u *usersUsecase) GetProfile(userId string) (*users.User, error) {
-	return u.usersRepository.GetProfile(userId)
+	profile, err := u.usersRepository.GetProfile(userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return profile, nil
 }
