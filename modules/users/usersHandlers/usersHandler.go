@@ -1,6 +1,8 @@
 package usersHandlers
 
 import (
+	"strings"
+
 	"github.com/Supakornn/hexagonal-go/config"
 	"github.com/Supakornn/hexagonal-go/modules/entities"
 	"github.com/Supakornn/hexagonal-go/modules/users"
@@ -14,10 +16,11 @@ type usersHandlerErrCode string
 const (
 	signUpCustomerErr     usersHandlerErrCode = "users-001"
 	signInErr             usersHandlerErrCode = "users-002"
-	refreshPassportErr    usersHandlerErrCode = "users-003"
+	refreshPassportErr    usersHandlerErrCode = "users-0"
 	signOutErr            usersHandlerErrCode = "users-004"
 	signUpAdminErr        usersHandlerErrCode = "users-005"
 	generateAdminTokenErr usersHandlerErrCode = "users-006"
+	getUserProfileErr     usersHandlerErrCode = "users-007"
 )
 
 type IUsersHandler interface {
@@ -27,6 +30,7 @@ type IUsersHandler interface {
 	SignOut(c *fiber.Ctx) error
 	SignUpAdmin(c *fiber.Ctx) error
 	GenerateAdminToken(c *fiber.Ctx) error
+	GetProfile(c *fiber.Ctx) error
 }
 
 type usersHandler struct {
@@ -214,4 +218,28 @@ func (h *usersHandler) SignOut(c *fiber.Ctx) error {
 	}
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, nil).Res()
+}
+
+func (h *usersHandler) GetProfile(c *fiber.Ctx) error {
+	userId := strings.Trim(c.Params("user_id"), " ")
+
+	result, err := h.usersUsecase.GetProfile(userId)
+	if err != nil {
+		switch err.Error() {
+		case "get user failed: sql: no rows in result set":
+			return entities.NewResponse(c).Error(
+				fiber.ErrBadRequest.Code,
+				string(getUserProfileErr),
+				err.Error(),
+			).Res()
+		default:
+			return entities.NewResponse(c).Error(
+				fiber.ErrInternalServerError.Code,
+				string(getUserProfileErr),
+				err.Error(),
+			).Res()
+		}
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, result).Res()
 }
