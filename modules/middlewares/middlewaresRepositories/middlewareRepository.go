@@ -1,9 +1,15 @@
 package middlewaresRepositories
 
-import "github.com/jmoiron/sqlx"
+import (
+	"fmt"
+
+	"github.com/Supakornn/hexagonal-go/modules/middlewares"
+	"github.com/jmoiron/sqlx"
+)
 
 type IMiddlewaresRepository interface {
 	FindAccessToken(userId, accessToken string) bool
+	FindRole() ([]*middlewares.Role, error)
 }
 
 type middlewaresRepository struct {
@@ -30,4 +36,20 @@ func (r *middlewaresRepository) FindAccessToken(userId, accessToken string) bool
 	}
 
 	return check
+}
+
+func (r *middlewaresRepository) FindRole() ([]*middlewares.Role, error) {
+	query := `
+	SELECT
+		"id",
+		"title" 
+	FROM "roles"
+	ORDER BY "id" DESC;`
+
+	role := make([]*middlewares.Role, 0)
+	if err := r.db.Select(&role, query); err != nil {
+		return nil, fmt.Errorf("roles are not found")
+	}
+
+	return role, nil
 }
