@@ -1,6 +1,9 @@
 package servers
 
 import (
+	"github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoHandlers"
+	"github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoRepositories"
+	"github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoUsecases"
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresHandlers"
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
@@ -14,6 +17,7 @@ import (
 type IModuleFactory interface {
 	MonitorModule()
 	UsersModule()
+	AppinfoModule()
 }
 
 type moduleFactory struct {
@@ -57,4 +61,13 @@ func (m *moduleFactory) UsersModule() {
 	router.Get("/admin/secret", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.GenerateAdminToken)
 
 	router.Post("/refresh", handler.RefreshPassport)
+}
+
+func (m *moduleFactory) AppinfoModule() {
+	repository := appinfoRepositories.AppinfoRepository(m.server.db)
+	usecase := appinfoUsecases.AppinfoUsecase(repository)
+	handler := appinfoHandlers.AppinfoHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/appinfo")
+	router.Get("/apikey", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.GenerateApiKey)
 }
