@@ -52,15 +52,15 @@ func (m *moduleFactory) UsersModule() {
 
 	router := m.router.Group("/users")
 
-	router.Post("/signup", handler.SignUpCustomer)
-	router.Post("/signin", handler.SignIn)
-	router.Post("/signout", handler.SignOut)
+	router.Post("/signup", m.middlewares.ApiKeyAuth(), handler.SignUpCustomer)
+	router.Post("/signin", m.middlewares.ApiKeyAuth(), handler.SignIn)
+	router.Post("/signout", m.middlewares.ApiKeyAuth(), handler.SignOut)
 	router.Get("/:user_id", m.middlewares.JwtAuth(), m.middlewares.ParamsCheck(), handler.GetProfile)
 
-	router.Post("/signup-admin", handler.SignUpAdmin)
+	router.Post("/signup-admin", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.SignUpAdmin)
 	router.Get("/admin/secret", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.GenerateAdminToken)
 
-	router.Post("/refresh", handler.RefreshPassport)
+	router.Post("/refresh", m.middlewares.ApiKeyAuth(), handler.RefreshPassport)
 }
 
 func (m *moduleFactory) AppinfoModule() {
@@ -69,5 +69,8 @@ func (m *moduleFactory) AppinfoModule() {
 	handler := appinfoHandlers.AppinfoHandler(m.server.cfg, usecase)
 
 	router := m.router.Group("/appinfo")
+
 	router.Get("/apikey", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.GenerateApiKey)
+
+	router.Get("/categories", m.middlewares.ApiKeyAuth(), handler.FindCategory)
 }
