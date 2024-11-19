@@ -6,5 +6,5 @@ type CategoryFilter struct {
 
 type Category struct {
 	Id    int    `db:"id" json:"id"`
-	Title string `db:"title" json:"title"`
+	Title string `db:"title" json:"title" form:"title"`
 }

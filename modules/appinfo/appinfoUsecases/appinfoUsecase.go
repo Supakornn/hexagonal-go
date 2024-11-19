@@ -2,18 +2,19 @@ package appinfoUsecases
 
 import (
 	"github.com/Supakornn/hexagonal-go/modules/appinfo"
-	appinforepositories "github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoRepositories"
+	"github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoRepositories"
 )
 
 type IAppinfoUsecase interface {
 	FindCategory(req *appinfo.CategoryFilter) ([]appinfo.Category, error)
+	InsertCategory(req []*appinfo.Category) error
 }
 
 type appinfoUsecase struct {
-	appinfoRepository appinforepositories.IAppinfoRepository
+	appinfoRepository appinfoRepositories.IAppinfoRepository
 }
 
-func AppinfoUsecase(appinfoRepository appinforepositories.IAppinfoRepository) IAppinfoUsecase {
+func AppinfoUsecase(appinfoRepository appinfoRepositories.IAppinfoRepository) IAppinfoUsecase {
 	return &appinfoUsecase{appinfoRepository: appinfoRepository}
 }
 
@@ -24,4 +25,12 @@ func (u *appinfoUsecase) FindCategory(req *appinfo.CategoryFilter) ([]appinfo.Ca
 	}
 
 	return category, nil
+}
+
+func (u *appinfoUsecase) InsertCategory(req []*appinfo.Category) error {
+	if err := u.appinfoRepository.InsertCategory(req); err != nil {
+		return err
+	}
+
+	return nil
 }
