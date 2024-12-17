@@ -4,6 +4,8 @@ import (
 	"github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoHandlers"
 	"github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoRepositories"
 	"github.com/Supakornn/hexagonal-go/modules/appinfo/appinfoUsecases"
+	"github.com/Supakornn/hexagonal-go/modules/files/filesHandlers"
+	"github.com/Supakornn/hexagonal-go/modules/files/filesUsecases"
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresHandlers"
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
@@ -18,6 +20,7 @@ type IModuleFactory interface {
 	MonitorModule()
 	UsersModule()
 	AppinfoModule()
+	FilesModule()
 }
 
 type moduleFactory struct {
@@ -75,4 +78,14 @@ func (m *moduleFactory) AppinfoModule() {
 	router.Get("/categories", m.middlewares.ApiKeyAuth(), handler.FindCategory)
 	router.Post("/categories", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.AddCategory)
 	router.Delete("/:category_id/categories", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.DeleteCategory)
+}
+
+func (m *moduleFactory) FilesModule() {
+	usecase := filesUsecases.FilesUsecase(m.server.cfg)
+	handler := filesHandlers.FilesHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/files")
+
+	router.Post("/upload", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.UploadFile)
+	router.Patch("/delete", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.DeleteFile)
 }

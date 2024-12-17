@@ -50,7 +50,7 @@ func LoadConfig(path string) IConfig {
 				return b
 			}(),
 			fileLimit: func() int {
-				f, err := strconv.Atoi(envMap["APP_PORT"])
+				f, err := strconv.Atoi(envMap["APP_FILE_LIMIT"])
 				if err != nil {
 					log.Fatalf("load file limit failed: %v", err)
 				}
