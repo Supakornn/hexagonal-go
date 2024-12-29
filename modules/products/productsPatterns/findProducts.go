@@ -1,6 +1,7 @@
 package productsPatterns
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,7 +12,6 @@ import (
 	"github.com/Supakornn/hexagonal-go/modules/products"
 	"github.com/Supakornn/hexagonal-go/pkg/utils"
 	"github.com/jmoiron/sqlx"
-	"golang.org/x/net/context"
 )
 
 type IFindProductBuilder interface {
@@ -93,7 +93,6 @@ func (b *findProductBuilder) countQuery() {
 		COUNT(*) AS "count"
 	FROM "products" "p"
 	WHERE 1 = 1`
-
 }
 
 func (b *findProductBuilder) whereQuery() {
@@ -132,7 +131,7 @@ func (b *findProductBuilder) sort() {
 	orderByMap := map[string]string{
 		"id":    "\"p\".\"id\"",
 		"title": "\"p\".\"title\"",
-		"price": "\"p\".\"price	\"",
+		"price": "\"p\".\"price\"",
 	}
 
 	if orderByMap[b.req.OrderBy] == "" {
@@ -192,6 +191,7 @@ func (b *findProductBuilder) Result() []*products.Product {
 		return make([]*products.Product, 0)
 	}
 
+	b.resetQuery()
 	return productsData
 }
 
