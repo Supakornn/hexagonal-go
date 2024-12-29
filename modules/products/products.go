@@ -15,3 +15,10 @@ type Product struct {
 	UpdatedAt   string            `json:"updated_at"`
 	Images      []*entities.Image `json:"images"`
 }
+
+type ProductFilter struct {
+	Id     string `query:"id"`
+	Search string `query:"search"`
+	*entities.PaginationReq
+	*entities.SortReq
+}
