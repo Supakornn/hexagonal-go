@@ -8,11 +8,13 @@ import (
 	"github.com/Supakornn/hexagonal-go/modules/entities"
 	"github.com/Supakornn/hexagonal-go/modules/files/filesUsecases"
 	"github.com/Supakornn/hexagonal-go/modules/products"
+	"github.com/Supakornn/hexagonal-go/modules/products/productsPatterns"
 	"github.com/jmoiron/sqlx"
 )
 
 type IProductsRepository interface {
 	FindOneProduct(productId string) (*products.Product, error)
+	FindProducts(req *products.ProductFilter) ([]*products.Product, int)
 }
 
 type productsRepositorty struct {
@@ -84,4 +86,14 @@ func (r *productsRepositorty) FindOneProduct(productId string) (*products.Produc
 	}
 
 	return product, nil
+}
+
+func (r *productsRepositorty) FindProducts(req *products.ProductFilter) ([]*products.Product, int) {
+	builder := productsPatterns.FindProductBuilder(r.db, req)
+	engineer := productsPatterns.FindProductEngineer(builder)
+
+	result := engineer.FindProduct().Result()
+	count := engineer.CountProduct().Count()
+
+	return result, count
 }
