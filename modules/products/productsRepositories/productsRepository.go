@@ -15,6 +15,7 @@ import (
 type IProductsRepository interface {
 	FindOneProduct(productId string) (*products.Product, error)
 	FindProducts(req *products.ProductFilter) ([]*products.Product, int)
+	InsertProduct(req *products.Product) (*products.Product, error)
 }
 
 type productsRepositorty struct {
@@ -96,4 +97,19 @@ func (r *productsRepositorty) FindProducts(req *products.ProductFilter) ([]*prod
 	count := engineer.CountProduct().Count()
 
 	return result, count
+}
+
+func (r *productsRepositorty) InsertProduct(req *products.Product) (*products.Product, error) {
+	builder := productsPatterns.InsertProductBuilder(r.db, req)
+	productId, err := productsPatterns.InsertProductEngineer(builder).InsertProduct()
+	if err != nil {
+		return nil, err
+	}
+
+	product, err := r.FindOneProduct(productId)
+	if err != nil {
+		return nil, err
+	}
+
+	return product, nil
 }

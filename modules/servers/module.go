@@ -104,4 +104,5 @@ func (m *moduleFactory) ProductsModule() {
 
 	router.Get("/:product_id", m.middlewares.ApiKeyAuth(), handler.FindOneProduct)
 	router.Get("/", m.middlewares.ApiKeyAuth(), handler.FindProducts)
+	router.Post("/", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.InsertProduct)
 }

@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/Supakornn/hexagonal-go/config"
+	"github.com/Supakornn/hexagonal-go/modules/appinfo"
 	"github.com/Supakornn/hexagonal-go/modules/entities"
 	"github.com/Supakornn/hexagonal-go/modules/files/filesUsecases"
 	"github.com/Supakornn/hexagonal-go/modules/products"
@@ -16,11 +17,13 @@ type productsHandlersErrCode string
 const (
 	findOneProductErr productsHandlersErrCode = "products-001"
 	findProductsErr   productsHandlersErrCode = "products-002"
+	insertProductsErr productsHandlersErrCode = "products-003"
 )
 
 type IProductsHandler interface {
 	FindOneProduct(c *fiber.Ctx) error
 	FindProducts(c *fiber.Ctx) error
+	InsertProduct(c *fiber.Ctx) error
 }
 
 type productsHandler struct {
@@ -85,4 +88,38 @@ func (h *productsHandler) FindProducts(c *fiber.Ctx) error {
 	products := h.productsUsecase.FindProducts(req)
 
 	return entities.NewResponse(c).Success(fiber.StatusOK, products).Res()
+}
+
+func (h *productsHandler) InsertProduct(c *fiber.Ctx) error {
+	req := &products.Product{
+		Category: &appinfo.Category{},
+		Images:   make([]*entities.Image, 0),
+	}
+
+	if err := c.BodyParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(insertProductsErr),
+			err.Error(),
+		).Res()
+	}
+
+	if req.Category.Id <= 0 {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(insertProductsErr),
+			"category id is invalid",
+		).Res()
+	}
+
+	product, err := h.productsUsecase.InsertProduct(req)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrInternalServerError.Code,
+			string(insertProductsErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusCreated, product).Res()
 }
