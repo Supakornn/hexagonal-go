@@ -218,9 +218,9 @@ type findProductEngineer struct {
 	builder IFindProductBuilder
 }
 
-func FindProductEngineer(builder IFindProductBuilder) *findProductEngineer {
+func FindProductEngineer(b IFindProductBuilder) *findProductEngineer {
 	return &findProductEngineer{
-		builder: builder,
+		builder: b,
 	}
 }
 

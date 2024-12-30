@@ -31,16 +31,6 @@ func InsertProductBuilder(db *sqlx.DB, req *products.Product) IInsertProductBuil
 	}
 }
 
-type insertProductEngineer struct {
-	builder IInsertProductBuilder
-}
-
-func InsertProductEngineer(b IInsertProductBuilder) *insertProductEngineer {
-	return &insertProductEngineer{
-		builder: b,
-	}
-}
-
 func (b *insertProductBuilder) initTransaction() error {
 	tx, err := b.db.BeginTxx(context.Background(), nil)
 	if err != nil {
@@ -157,6 +147,16 @@ func (b *insertProductBuilder) commit() error {
 
 func (b *insertProductBuilder) getProductId() string {
 	return b.req.Id
+}
+
+type insertProductEngineer struct {
+	builder IInsertProductBuilder
+}
+
+func InsertProductEngineer(b IInsertProductBuilder) *insertProductEngineer {
+	return &insertProductEngineer{
+		builder: b,
+	}
 }
 
 func (en *insertProductEngineer) InsertProduct() (string, error) {
