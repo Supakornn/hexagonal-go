@@ -17,13 +17,15 @@ type productsHandlersErrCode string
 const (
 	findOneProductErr productsHandlersErrCode = "products-001"
 	findProductsErr   productsHandlersErrCode = "products-002"
-	insertProductsErr productsHandlersErrCode = "products-003"
+	insertProductErr  productsHandlersErrCode = "products-003"
+	updateProductErr  productsHandlersErrCode = "products-004"
 )
 
 type IProductsHandler interface {
 	FindOneProduct(c *fiber.Ctx) error
 	FindProducts(c *fiber.Ctx) error
 	InsertProduct(c *fiber.Ctx) error
+	UpdateProduct(c *fiber.Ctx) error
 }
 
 type productsHandler struct {
@@ -99,7 +101,7 @@ func (h *productsHandler) InsertProduct(c *fiber.Ctx) error {
 	if err := c.BodyParser(req); err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
-			string(insertProductsErr),
+			string(insertProductErr),
 			err.Error(),
 		).Res()
 	}
@@ -107,7 +109,7 @@ func (h *productsHandler) InsertProduct(c *fiber.Ctx) error {
 	if req.Category.Id <= 0 {
 		return entities.NewResponse(c).Error(
 			fiber.ErrBadRequest.Code,
-			string(insertProductsErr),
+			string(insertProductErr),
 			"category id is invalid",
 		).Res()
 	}
@@ -116,10 +118,40 @@ func (h *productsHandler) InsertProduct(c *fiber.Ctx) error {
 	if err != nil {
 		return entities.NewResponse(c).Error(
 			fiber.ErrInternalServerError.Code,
-			string(insertProductsErr),
+			string(insertProductErr),
 			err.Error(),
 		).Res()
 	}
 
 	return entities.NewResponse(c).Success(fiber.StatusCreated, product).Res()
+}
+
+func (h *productsHandler) UpdateProduct(c *fiber.Ctx) error {
+	productId := strings.Trim(c.Params("product_id"), " ")
+
+	req := &products.Product{
+		Images:   make([]*entities.Image, 0),
+		Category: &appinfo.Category{},
+	}
+
+	if err := c.BodyParser(req); err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrBadRequest.Code,
+			string(updateProductErr),
+			err.Error(),
+		).Res()
+	}
+
+	req.Id = productId
+
+	product, err := h.productsUsecase.UpdateProduct(req)
+	if err != nil {
+		return entities.NewResponse(c).Error(
+			fiber.ErrInternalServerError.Code,
+			string(updateProductErr),
+			err.Error(),
+		).Res()
+	}
+
+	return entities.NewResponse(c).Success(fiber.StatusOK, product).Res()
 }
