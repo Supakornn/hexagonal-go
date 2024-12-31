@@ -70,7 +70,7 @@ func (b *updateProductBuilder) initQuery() {
 func (b *updateProductBuilder) updateTitleQuery() {
 	if b.req.Title != "" {
 		b.values = append(b.values, b.req.Title)
-		b.lastStackIndex = len(b.values) - 1
+		b.lastStackIndex = len(b.values)
 		b.queryFields = append(b.queryFields, fmt.Sprintf(`
 		"title" = $%d`, b.lastStackIndex))
 	}
@@ -79,7 +79,7 @@ func (b *updateProductBuilder) updateTitleQuery() {
 func (b *updateProductBuilder) updateDescriptionQuery() {
 	if b.req.Description != "" {
 		b.values = append(b.values, b.req.Description)
-		b.lastStackIndex = len(b.values) - 1
+		b.lastStackIndex = len(b.values)
 		b.queryFields = append(b.queryFields, fmt.Sprintf(`
 		"description" = $%d`, b.lastStackIndex))
 	}
@@ -88,7 +88,7 @@ func (b *updateProductBuilder) updateDescriptionQuery() {
 func (b *updateProductBuilder) updatePriceQuery() {
 	if b.req.Price > 0 {
 		b.values = append(b.values, b.req.Price)
-		b.lastStackIndex = len(b.values) - 1
+		b.lastStackIndex = len(b.values)
 		b.queryFields = append(b.queryFields, fmt.Sprintf(`
 		"price" = $%d`, b.lastStackIndex))
 	}
@@ -197,10 +197,7 @@ func (b *updateProductBuilder) deleteOldImages() error {
 				Destination: fmt.Sprintf("images/products/%s", img.FileName),
 			})
 		}
-		if err := b.fileUsecase.DeleteFromGCP(deleteFileReq); err != nil {
-			b.tx.Rollback()
-			return fmt.Errorf("delete images failed: %w", err)
-		}
+		b.fileUsecase.DeleteFromGCP(deleteFileReq)
 	}
 
 	if _, err := b.tx.ExecContext(
@@ -217,9 +214,9 @@ func (b *updateProductBuilder) deleteOldImages() error {
 
 func (b *updateProductBuilder) closeQuery() {
 	b.values = append(b.values, b.req.Id)
-	b.lastStackIndex = len(b.values) - 1
-	b.queryFields = append(b.queryFields, fmt.Sprintf(`
-	WHERE "id" = $%d`, b.lastStackIndex))
+	b.lastStackIndex = len(b.values)
+	b.query += fmt.Sprintf(`
+	WHERE "id" = $%d`, b.lastStackIndex)
 }
 
 func (b *updateProductBuilder) updateProduct() error {
