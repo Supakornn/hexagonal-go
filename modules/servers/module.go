@@ -10,6 +10,9 @@ import (
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresRepositories"
 	"github.com/Supakornn/hexagonal-go/modules/middlewares/middlewaresUsecases"
 	"github.com/Supakornn/hexagonal-go/modules/monitor/monitorHandlers"
+	ordersHandlersgo "github.com/Supakornn/hexagonal-go/modules/orders/ordersHandlers.go"
+	"github.com/Supakornn/hexagonal-go/modules/orders/ordersRepositories"
+	"github.com/Supakornn/hexagonal-go/modules/orders/ordersUsecases"
 	"github.com/Supakornn/hexagonal-go/modules/products/productsHandlers"
 	"github.com/Supakornn/hexagonal-go/modules/products/productsRepositories"
 	"github.com/Supakornn/hexagonal-go/modules/products/productsUsecases"
@@ -25,6 +28,7 @@ type IModuleFactory interface {
 	AppinfoModule()
 	FilesModule()
 	ProductsModule()
+	OrdersModule()
 }
 
 type moduleFactory struct {
@@ -107,4 +111,17 @@ func (m *moduleFactory) ProductsModule() {
 	router.Post("/", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.InsertProduct)
 	router.Patch("/:product_id", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.UpdateProduct)
 	router.Delete("/:product_id", m.middlewares.JwtAuth(), m.middlewares.Authorize(2), handler.DeleteProduct)
+}
+
+func (m *moduleFactory) OrdersModule() {
+	fileUsecase := filesUsecases.FilesUsecase(m.server.cfg)
+	productsRepository := productsRepositories.ProductsRepository(m.server.db, m.server.cfg, fileUsecase)
+
+	repository := ordersRepositories.OrdersRepository(m.server.db)
+	usecase := ordersUsecases.OrdersUsecase(repository, productsRepository)
+	handler := ordersHandlersgo.OrdersHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/orders")
+
+	router.Get("/:order_id", m.middlewares.JwtAuth(), handler.FindOneOrder)
 }
