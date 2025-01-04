@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	"github.com/Supakornn/hexagonal-go/modules/orders"
+	"github.com/Supakornn/hexagonal-go/modules/orders/ordersPatterns"
 	"github.com/jmoiron/sqlx"
 )
 
 type IOrdersRepository interface {
 	FindOneOrder(orderId string) (*orders.Order, error)
+	FindOrders(req *orders.OrderFilter) ([]*orders.Order, int)
 }
 
 type ordersRepository struct {
@@ -71,4 +73,11 @@ func (r *ordersRepository) FindOneOrder(orderId string) (*orders.Order, error) {
 	}
 
 	return orderData, nil
+}
+
+func (r *ordersRepository) FindOrders(req *orders.OrderFilter) ([]*orders.Order, int) {
+	builder := ordersPatterns.FindOrdersBuilder(r.db, req)
+	engineer := ordersPatterns.FindOrdersEngineer(builder)
+
+	return engineer.FindOrders(), engineer.CountOrders()
 }
