@@ -51,6 +51,7 @@ func (b *findOrdersBuilder) initQuery() {
 	SELECT 
 		array_to_json(array_agg("at"))
 	FROM(
+		SELECT
             "o"."id",
             "o"."user_id",
             "o"."transfer_slip",
@@ -118,7 +119,7 @@ func (b *findOrdersBuilder) buildWhereSearch() {
 func (b *findOrdersBuilder) buildWhereStatus() {
 	if b.req.Status != "" {
 		b.values = append(b.values,
-			strings.ToLower(b.req.Search),
+			strings.ToLower(b.req.Status),
 		)
 
 		query := fmt.Sprintf(`
