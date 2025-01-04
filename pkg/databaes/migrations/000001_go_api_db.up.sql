@@ -20,7 +20,7 @@ CREATE TYPE "order_status" AS ENUM (
     'waiting',
     'shipping',
     'completed',
-    'canceled'
+    'cancelled'
 );
 
 CREATE TABLE "users" (

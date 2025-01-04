@@ -1,7 +1,6 @@
 package middlewaresHandlers
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Supakornn/hexagonal-go/config"
@@ -106,8 +105,11 @@ func (h *middlewaresHandler) JwtAuth() fiber.Handler {
 
 func (h *middlewaresHandler) ParamsCheck() fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		if c.Locals("userRoleId").(int) == 2 {
+			return c.Next()
+		}
+
 		userId := c.Locals("userId")
-		fmt.Println(userId)
 		if c.Params("user_id") != userId {
 			return entities.NewResponse(c).Error(
 				fiber.ErrUnauthorized.Code,
