@@ -33,7 +33,7 @@ vendor
 
 # Customs
 *.env*
-.air*
+!.env.dev.example
 /tmp
 *.pem
 apikey.txt
