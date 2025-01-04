@@ -1,6 +1,7 @@
 package ordersRepositories
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -13,6 +14,7 @@ type IOrdersRepository interface {
 	FindOneOrder(orderId string) (*orders.Order, error)
 	FindOrders(req *orders.OrderFilter) ([]*orders.Order, int)
 	InsertOrder(req *orders.Order) (string, error)
+	UpdateOrder(req *orders.Order) error
 }
 
 type ordersRepository struct {
@@ -90,4 +92,47 @@ func (r *ordersRepository) InsertOrder(req *orders.Order) (string, error) {
 	}
 
 	return orderId, nil
+}
+
+func (r *ordersRepository) UpdateOrder(req *orders.Order) error {
+	query := `
+	UPDATE "orders" SET `
+
+	queryWhereStack := make([]string, 0)
+	values := make([]any, 0)
+	lastIndex := 1
+
+	if req.Status != "" {
+		values = append(values, req.Status)
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`"status" = $%d`, lastIndex))
+
+		lastIndex++
+	}
+
+	if req.TransferSlip != nil {
+		values = append(values, req.TransferSlip)
+		queryWhereStack = append(queryWhereStack, fmt.Sprintf(`"transfer_slip" = $%d`, lastIndex))
+
+		lastIndex++
+	}
+
+	values = append(values, req.Id)
+
+	queryClose := fmt.Sprintf(` WHERE "id" = $%d;`, lastIndex)
+
+	for i := range queryWhereStack {
+		if i != len(queryWhereStack)-1 {
+			query += queryWhereStack[i] + ","
+		} else {
+			query += queryWhereStack[i]
+		}
+	}
+
+	query += queryClose
+
+	if _, err := r.db.ExecContext(context.Background(), query, values...); err != nil {
+		return fmt.Errorf("update order failed: %w", err)
+	}
+
+	return nil
 }
