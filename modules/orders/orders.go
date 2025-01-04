@@ -1,6 +1,9 @@
 package orders
 
-import "github.com/Supakornn/hexagonal-go/modules/products"
+import (
+	"github.com/Supakornn/hexagonal-go/modules/entities"
+	"github.com/Supakornn/hexagonal-go/modules/products"
+)
 
 type Order struct {
 	Id           string           `db:"id" json:"id"`
@@ -26,4 +29,13 @@ type ProductsOrder struct {
 	Id      string            `db:"id" json:"id"`
 	Qty     int               `db:"qty" json:"qty"`
 	Product *products.Product `db:"product" json:"product"`
+}
+
+type OrderFilter struct {
+	Search    string `query:"search"`
+	Status    string `query:"status"`
+	StartDate string `query:"start_date"`
+	EndDate   string `query:"end_date"`
+	*entities.PaginationReq
+	*entities.SortReq
 }
