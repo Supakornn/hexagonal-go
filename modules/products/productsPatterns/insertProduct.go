@@ -153,9 +153,9 @@ type insertProductEngineer struct {
 	builder IInsertProductBuilder
 }
 
-func InsertProductEngineer(b IInsertProductBuilder) *insertProductEngineer {
+func InsertProductEngineer(builder IInsertProductBuilder) *insertProductEngineer {
 	return &insertProductEngineer{
-		builder: b,
+		builder: builder,
 	}
 }
 
