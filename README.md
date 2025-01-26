@@ -1,4 +1,4 @@
-# E-Commerce REST APIs With GO
+# 🛍️ E-Commerce REST APIs With GO
 
 This is a simple E-Commerce REST APIs project using Golang. This project is built using the following technologies
 
