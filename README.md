@@ -113,5 +113,3 @@ GET /api/v1/orders/:id      # Get order details
 ├── docker-compose.yml
 └── README.md
 ```
-
-## 📝 License
