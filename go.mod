@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	cloud.google.com/go/storage v1.40.0
 	github.com/gofiber/fiber/v2 v2.52.5
-	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
